@@ -7,10 +7,18 @@ import org.colomoto.logicparam.core.Formula;
 public class Play {
 
 	public static void main(String[] argv) {
-		byte n = 5;
-		byte max = 2;
-		Play.goDown(n, max);
+		byte n = Byte.parseByte(argv[0]);
+		byte max = Byte.parseByte(argv[1]);
+		Play.goUp(n, max);
 	}
+	
+	// TODO
+	// 1. Load a model of the article
+	// 2. Pick a target variable
+	// 3. create a path with all possible functions
+	// 4. for each function:
+	// 4.1  translate the function to LogicalModel
+	// 4.2  compute trap-sets of the model
 
 	private static void goDown(byte n, byte max) {
 		while (true) {

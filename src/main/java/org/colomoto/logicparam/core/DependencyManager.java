@@ -286,6 +286,8 @@ public class DependencyManager {
 	public void setDepEq(Set<LogicalParameter> sLPs) { // for the same value
 		for (LogicalParameter lp1 : sLPs) {
 			for (LogicalParameter lp2 : sLPs) {
+				if (lp1.equals(lp2)) // if they are the same
+					continue;
 				if (lp1.getState() == lp2.getState()) { // independence is tested inside setDepEq()
 					this.setDepEq(lp1, lp2);
 				}

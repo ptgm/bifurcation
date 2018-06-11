@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.Set;
 
+import org.colomoto.logicparam.core.Tuple;
+
 /**
  * @author Pedro T. Monteiro
  * @author Wassim Abou-Jaoudé
@@ -31,36 +33,24 @@ public class BifurcationHDPath {
 	 * Parameter Dependency Graph.
 	 */
 	public boolean increase() {
+		System.out.println("\n------------------ Increasing another step -----------------------");
 		// Pick the most general formula (last on the queue)
 		Formula f = this.path.getLast();
+		System.out.println("Current Formula: " + f);
 		// Get possible parent functions respecting DepGraph restrictions
-		Set<Tuple> sParents = HasseDiagram.getParents(this.depGraph, f, this.maxTarget);
-		if (sParents.isEmpty()) {
-			// System.out.println("------- END");
+		Tuple tNeighbour = HasseDiagram.getParent(this.depGraph, f, this.maxTarget);
+		if (tNeighbour == null) {
+			 System.out.println("------- END");
 			// cannot increase anymore
 			return false;
-		} else if (sParents.size() == 1) {
-			// If there's only one parent function, no choice (additional restriction) is
-			// made
-			Formula fnew = sParents.iterator().next().getFormula();
-			// System.out.println("------ Single Successor");
-			// System.out.println(" - " + fnew);
-			this.path.addLast(fnew);
-			return true;
 		}
-		// otherwise, need to update DepGraph with choice restrictions
-		// choosing one at random
-		int randPos = (new Random()).nextInt(sParents.size());
-		Tuple t = (new ArrayList<Tuple>(sParents)).get(randPos);
-		// Updating path with new formula
-		this.path.addLast(t.getFormula());
-		// System.out.println("------ Multip Successor");
-		// System.out.println(" - " + t.getFormula());
-		// Update Parameter Dependency Graph restrictions
-		this.depGraph.setDepEq(t.getChangeLPs()); // 1st for LPs considered Equal
+		System.out.println(" - Parent: " + tNeighbour.getFormula());
+		this.path.addLast(tNeighbour.getFormula());
+
+		this.depGraph.setDepEq(tNeighbour.getChangeLPs()); // 1st for LPs considered Equal
 		// System.out.println(" . ChangeLPs: " + t.getChangeLPs());
-		for (LogicalParameter lpChange : t.getChangeLPs()) {
-			for (LogicalParameter lp : t.getFormula().getParams()) {
+		for (LogicalParameter lpChange : tNeighbour.getChangeLPs()) {
+			for (LogicalParameter lp : tNeighbour.getFormula().getParams()) {
 				// All that have the previous value of lpChange have the LT restriction
 				if ((lp.getState() + 1) == lpChange.getState()) {
 					// lpChange increased before lp -> restriction to keep in the future
@@ -73,36 +63,24 @@ public class BifurcationHDPath {
 	}
 
 	public boolean decrease() {
+		System.out.println("\n------------------ Decreasing another step -----------------------");
 		// Pick the most specific formula (first on the queue)
 		Formula f = this.path.getFirst();
+		System.out.println("Current Formula: " + f);
 		// Get possible children functions respecting DepGraph restrictions
-		Set<Tuple> sChildren = HasseDiagram.getChildren(this.depGraph, f, this.maxTarget);
-		if (sChildren.isEmpty()) {
-//			 System.out.println("------- END");
+		Tuple tNeighbour = HasseDiagram.getChild(this.depGraph, f, this.maxTarget);
+		if (tNeighbour == null) {
+			 System.out.println("------- END");
 			// cannot increase anymore
 			return false;
-		} else if (sChildren.size() == 1) {
-			// If there's only one parent function, no choice (additional restriction) is
-			// made
-			Formula fnew = sChildren.iterator().next().getFormula();
-//			 System.out.println("------ Single Successor");
-//			 System.out.println(" - " + fnew);
-			this.path.addFirst(fnew);
-			return true;
 		}
-		// otherwise, need to update DepGraph with choice restrictions
-		// choosing one at random
-		int randPos = (new Random()).nextInt(sChildren.size());
-		Tuple t = (new ArrayList<Tuple>(sChildren)).get(randPos);
-		// Updating path with new formula
-		this.path.addFirst(t.getFormula());
-//		 System.out.println("------ Multip Successor");
-//		 System.out.println(" - " + t.getFormula());
-		// Update Parameter Dependency Graph restrictions
-		this.depGraph.setDepEq(t.getChangeLPs()); // 1st for LPs considered Equal
+		System.out.println(" - Child: " + tNeighbour.getFormula());
+		this.path.addFirst(tNeighbour.getFormula());
+
+		this.depGraph.setDepEq(tNeighbour.getChangeLPs()); // 1st for LPs considered Equal
 //		 System.out.println(" . ChangeLPs: " + t.getChangeLPs());
-		for (LogicalParameter lpChange : t.getChangeLPs()) {
-			for (LogicalParameter lp : t.getFormula().getParams()) {
+		for (LogicalParameter lpChange : tNeighbour.getChangeLPs()) {
+			for (LogicalParameter lp : tNeighbour.getFormula().getParams()) {
 				// All that have the previous value of lpChange have the LT restriction
 				if ((lp.getState() - 1) == lpChange.getState()) {
 					// lpChange decreased before lp -> restriction to keep in the future

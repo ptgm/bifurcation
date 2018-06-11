@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * 
+ * @author Pedro T. Monteiro
+ * @author Wassim Abou-Jaoudé
+ */
 public class Formula {
 	private List<LogicalParameter> lParams;
 
@@ -25,11 +30,11 @@ public class Formula {
 		if (this.lParams.size() != f.lParams.size())
 			return false;
 		for (int i = 0; i < this.lParams.size(); i++) {
-			// The same parameters
-			if (!this.lParams.get(i).equals(f.lParams.get(i)))
-				return false;
 			// With the same value
 			if (this.lParams.get(i).getState() != f.lParams.get(i).getState())
+				return false;
+			// With the same bit signature
+			if (!this.lParams.get(i).equals(f.lParams.get(i)))
 				return false;
 		}
 		return true;

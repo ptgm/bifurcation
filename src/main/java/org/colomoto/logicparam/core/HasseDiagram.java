@@ -1,6 +1,7 @@
 package org.colomoto.logicparam.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,15 +15,15 @@ import org.colomoto.logicparam.Utils;
  */
 public class HasseDiagram {
 
-	public static Set<Tuple> getParents(DependencyManager pdg, Formula f, byte maxTarget) {
-		return HasseDiagram.getNeighbours(pdg, f, maxTarget, true, true);
+	public static Tuple getParent(DependencyManager pdg, Formula f, byte maxTarget) {
+		return HasseDiagram.getNeighbour(pdg, f, maxTarget, true, true);
 	}
 
-	public static Set<Tuple> getChildren(DependencyManager pdg, Formula f, byte maxTarget) {
-		return HasseDiagram.getNeighbours(pdg, f, maxTarget, false, true);
+	public static Tuple getChild(DependencyManager pdg, Formula f, byte maxTarget) {
+		return HasseDiagram.getNeighbour(pdg, f, maxTarget, false, true);
 	}
 
-	public static Set<Tuple> getNeighbours(DependencyManager pdg, Formula f, byte maxTarget, boolean parent,
+	public static Tuple getNeighbour(DependencyManager pdg, Formula f, byte maxTarget, boolean parent,
 			boolean fullyAsync) {
 		List<Integer> lPos = new ArrayList<Integer>();
 		List<LogicalParameter> fLPs = f.getParams();
@@ -40,21 +41,22 @@ public class HasseDiagram {
 			}
 			lPos.add(i);
 		}
-		// System.out.println("===== Lpos: " + lPos); // <- LPs than can change
-		Set<Tuple> sParentChild = new HashSet<Tuple>();
+		System.out.println(". LPs than can change: " + lPos); // <- LPs than can change
 		if (fullyAsync) {
 			// equal LogicalParameters are possible
-			for (List<Integer> elems : Utils.getSubsets(lPos)) {
-				// System.out.println("===== elems: " + elems);
+			List<List<Integer>> lSubsets = Utils.getSubsets(lPos);
+			Collections.shuffle(lSubsets);
+			for (List<Integer> elems : lSubsets) {
 				if (elems.isEmpty()) {
-					// System.out.println(" empty");
 					continue;
 				}
+				System.out.println(". LPs combination: " + elems);
 				// Increase if equal LogicalParameters can all increase -- begin
 				if (!pdg.isValidLPSet(elems)) {
-					// System.out.println(" invalid");
+					System.out.println("   . invalid");
 					continue;
 				}
+				System.out.println("   . Valid");
 				Formula fClone = f.clone();
 				Set<LogicalParameter> sChangeParams = new HashSet<LogicalParameter>();
 				for (Integer i : elems) {
@@ -67,24 +69,22 @@ public class HasseDiagram {
 					}
 					sChangeParams.add(lp);
 				}
-				sParentChild.add(new Tuple(fClone, sChangeParams));
-				// System.out.println("---------c " + fClone + " | " + sIncParams);
+				return new Tuple(fClone, sChangeParams);
 			}
 		} else {
 			// equal LogicalParameters are impossible
-			for (Integer i : lPos) {
-				Formula fClone = f.clone();
-				LogicalParameter lp = fClone.getParams().get(i);
-				if (parent) {
-					lp.increase();
-				} else {
-					lp.decrease();
-				}
-				Set<LogicalParameter> sChangeParams = new HashSet<LogicalParameter>();
-				sChangeParams.add(lp);
-				sParentChild.add(new Tuple(fClone, sChangeParams));
+			Collections.shuffle(lPos); // randomly choose a parameter
+			Formula fClone = f.clone();
+			LogicalParameter lp = fClone.getParams().get(lPos.get(0));
+			if (parent) {
+				lp.increase();
+			} else {
+				lp.decrease();
 			}
+			Set<LogicalParameter> sChangeParams = new HashSet<LogicalParameter>();
+			sChangeParams.add(lp);
+			return new Tuple(fClone, sChangeParams);
 		}
-		return sParentChild;
+		return null;
 	}
 }
