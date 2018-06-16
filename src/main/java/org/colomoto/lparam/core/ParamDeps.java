@@ -1,4 +1,4 @@
-package org.colomoto.logicparam.core;
+package org.colomoto.lparam.core;
 
 import java.util.ArrayList;
 import java.util.Collections;

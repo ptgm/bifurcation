@@ -1,13 +1,10 @@
-package org.colomoto.logicparam.core;
+package org.colomoto.lparam.core;
 
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Random;
-import java.util.Set;
-
-import org.colomoto.logicparam.core.Tuple;
+import java.util.List;
 
 /**
  * @author Pedro T. Monteiro
@@ -40,7 +37,7 @@ public class BifurcationHDPath {
 		// Get possible parent functions respecting DepGraph restrictions
 		Tuple tNeighbour = HasseDiagram.getParent(this.depGraph, f, this.maxTarget);
 		if (tNeighbour == null) {
-			 System.out.println("------- END");
+			System.out.println("------- END");
 			// cannot increase anymore
 			return false;
 		}
@@ -70,7 +67,7 @@ public class BifurcationHDPath {
 		// Get possible children functions respecting DepGraph restrictions
 		Tuple tNeighbour = HasseDiagram.getChild(this.depGraph, f, this.maxTarget);
 		if (tNeighbour == null) {
-			 System.out.println("------- END");
+			System.out.println("------- END");
 			// cannot increase anymore
 			return false;
 		}
@@ -78,7 +75,7 @@ public class BifurcationHDPath {
 		this.path.addFirst(tNeighbour.getFormula());
 
 		this.depGraph.setDepEq(tNeighbour.getChangeLPs()); // 1st for LPs considered Equal
-//		 System.out.println(" . ChangeLPs: " + t.getChangeLPs());
+		// System.out.println(" . ChangeLPs: " + t.getChangeLPs());
 		for (LogicalParameter lpChange : tNeighbour.getChangeLPs()) {
 			for (LogicalParameter lp : tNeighbour.getFormula().getParams()) {
 				// All that have the previous value of lpChange have the LT restriction
@@ -91,13 +88,26 @@ public class BifurcationHDPath {
 		}
 		return true;
 	}
-	
-	public Formula getLast() {
-		return this.path.getLast();
+
+	public void computePath() {
+		// compute everything above
+		while (this.decrease()) {
+		}
+		// compute everything bellow
+		while (this.increase()) {
+		}
 	}
 
 	public Formula getFirst() {
 		return this.path.getFirst();
+	}
+
+	public Formula getLast() {
+		return this.path.getLast();
+	}
+
+	public List<Formula> getPath() {
+		return new ArrayList<Formula>(this.path);
 	}
 
 	public String toString() {

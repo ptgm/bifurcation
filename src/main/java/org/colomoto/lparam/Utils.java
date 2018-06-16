@@ -1,4 +1,4 @@
-package org.colomoto.logicparam;
+package org.colomoto.lparam;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.colomoto.logicparam.core;
+package org.colomoto.lparam.core;
 
 import java.util.BitSet;
 
@@ -27,6 +27,10 @@ public class LogicalParameter {
 
 	public int hashCode() {
 		return this.signature.hashCode();
+	}
+	
+	public int nVars() {
+		return this.nvars;
 	}
 
 	public boolean equals(Object o) {

@@ -1,4 +1,4 @@
-package org.colomoto.logicparam.core;
+package org.colomoto.lparam.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.colomoto.logicparam.Utils;
+import org.colomoto.lparam.Utils;
 
 /**
  * 
@@ -50,12 +50,13 @@ public class HasseDiagram {
 				if (elems.isEmpty()) {
 					continue;
 				}
-				System.out.println(". LPs combination: " + elems);
 				// Increase if equal LogicalParameters can all increase -- begin
 				if (!pdg.isValidLPSet(elems)) {
-					System.out.println("   . invalid");
+//					System.out.println(". LPs combination: " + elems);
+//					System.out.println("   . invalid");
 					continue;
 				}
+				System.out.println(". LPs valid combination: " + elems);
 				System.out.println("   . Valid");
 				Formula fClone = f.clone();
 				Set<LogicalParameter> sChangeParams = new HashSet<LogicalParameter>();
