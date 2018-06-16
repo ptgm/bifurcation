@@ -12,7 +12,7 @@ import java.util.Set;
 // FIXME This manager should have positions rather than LPs. Currently is a mess to get their value.
 // Is the current value of an LP being taken from f or from the manager...?
 public class DependencyManager {
-	private byte nvars;
+	private int nvars;
 	private Map<LogicalParameter, Set<LogicalParameter>> mParents;
 	private Map<LogicalParameter, Set<LogicalParameter>> mChildren;
 	private Map<LogicalParameter, Set<LogicalParameter>> mEquals;
@@ -27,7 +27,7 @@ public class DependencyManager {
 		this.mChildren = new HashMap<LogicalParameter, Set<LogicalParameter>>();
 	}
 
-	public DependencyManager(byte nvars) {
+	public DependencyManager(int nvars) {
 		this();
 		this.nvars = nvars;
 		// Start with Bottom LP

@@ -79,7 +79,7 @@ public class Formula {
 		for (int i = 0; i < this.lParams.size(); i++) {
 			if (!s.isEmpty())
 				s += ",";
-			s += this.lParams.get(i).getState();
+			s += this.lParams.get(i) + "@" + this.lParams.get(i).getState();
 		}
 		return "{" + s + "}";
 	}

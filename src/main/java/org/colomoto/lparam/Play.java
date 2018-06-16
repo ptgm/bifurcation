@@ -1,16 +1,16 @@
 package org.colomoto.lparam;
 
 import java.io.File;
-import java.io.IOException;
 
-import org.colomoto.biolqm.LQMServiceManager;
+import org.colomoto.biolqm.LQMScriptLauncher;
 import org.colomoto.biolqm.LogicalModel;
-import org.colomoto.biolqm.LogicalModelImpl;
 import org.colomoto.biolqm.NodeInfo;
+import org.colomoto.biolqm.tool.trapspaces.TrapSpace;
+import org.colomoto.biolqm.tool.trapspaces.TrapSpaceList;
+import org.colomoto.biolqm.tool.trapspaces.TrapSpaceTool;
 import org.colomoto.lparam.core.BifurcationHDPath;
 import org.colomoto.lparam.core.DependencyManager;
 import org.colomoto.lparam.core.Formula;
-import org.colomoto.mddlib.MDDManager;
 
 public class Play {
 
@@ -28,74 +28,37 @@ public class Play {
 			System.out.println("Two arguments expected");
 			Play.usage();
 		}
+
 		File fModel = new File(argv[0]);
 		if (!fModel.isFile()) {
-			System.out.println("First argument is not a file");
+			System.out.println("First argument is not a file: " + argv[0]);
 			Play.usage();
 		}
+		String nodeID = argv[1];
 
-		// Load model
-		LogicalModel m = null;
-		try {
-			m = LQMServiceManager.getFormat("sbml").importFile(fModel);
-		} catch (IOException e) {
-			System.out.println("Error loading model " + fModel.getName());
-			Play.usage();
-		}
+		GINML2Bifurcation gin2Bifurc = new GINML2Bifurcation(fModel);
+		BifurcationHDPath bifPath = gin2Bifurc.getBifurcation(nodeID);
+		bifPath.computePath();
 
-		// Verify component
-		NodeInfo node = m.getComponent(argv[1]);
-		if (node == null) {
-			System.out.println("Invalid component name");
-			Play.usage();
-		}
-		int index = m.getComponents().indexOf(node);
-		MDDManager ddmanager = m.getMDDManager();
-		LP2MDD lp2mdd = new LP2MDD(m);
-		int[] mapping = { 0, 1 };
-		// check regulators
-		BifurcationHDPath bifPath = Play.getPathUp((byte) 2, node.getMax());
+		LQMScriptLauncher lqm = new LQMScriptLauncher(null);
+		TrapSpaceTool trapTool = (TrapSpaceTool) lqm.getTool("trapspace");
+
 		for (Formula f : bifPath.getPath()) {
-			int[] kMDDs = m.getLogicalFunctions().clone();
-			kMDDs[index] = lp2mdd.getBDD(f.getParams(), mapping);
-			LogicalModel model = new LogicalModelImpl(m.getComponents(), ddmanager, kMDDs);
-
+			try {
+				System.out.println("\n" + f);
+				LogicalModel m = gin2Bifurc.getModel(nodeID, f);
+				TrapSpaceList list = trapTool.getResult(m);
+				for (NodeInfo n : list.nodes)
+					System.out.print(n + " ");
+				System.out.println();
+				for (TrapSpace tspace : list) {
+					System.out.println(" " + tspace);
+				}
+			} catch (Exception e) {
+				System.out.println(f + " ERROR");
+			}
 		}
 	}
-
-	// private static LogicalModel loadModel(File fName, NodeInfo node) throws
-	// IOException {
-	// RegulatoryGraph g = (RegulatoryGraph)
-	// GSGraphManager.getInstance().open(fName);
-	// List<RegulatoryNode> lNodes = g.getNodeOrder();
-	// int i = 0;
-	// for (; i < lNodes.size(); i++) {
-	// if (lNodes.get(i).getId().equals(node.getNodeID()))
-	// break;
-	// }
-	// Collection<RegulatoryMultiEdge> cEdges = g.getIncomingEdges(lNodes.get(i));
-	// System.out.println(cEdges.);
-	// RegulatoryGraph g = GSServiceManager.getService(name)
-	// LogicalModelFormat format = LQMServiceManager.getFormat("sbml");
-	// return format.importFile(fName);
-	// }
-
-	// private static Formula mdd2Formula(LogicalModel m, NodeInfo node) {
-	// int index = m.getComponents().indexOf(node);
-	// boolean core = index >= 0;
-	// int[] kMDDs;
-	//
-	// if (core) {
-	// kMDDs = m.getLogicalFunctions();
-	// } else {
-	// index = m.getExtraComponents().indexOf(node);
-	// kMDDs = m.getExtraLogicalFunctions();
-	// }
-	// PathSearcher search = new PathSearcher(m.getMDDManager(), 1, node.getMax());
-	// int[] path = search.getPath();
-	// search.setNode(kMDDs[index]);
-	//
-	// }
 
 	// TODO
 	// 1. Load a model of the article

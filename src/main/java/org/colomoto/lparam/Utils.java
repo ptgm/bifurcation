@@ -14,7 +14,7 @@ public class Utils {
 		for (int i = 0; i < (1 << n); i++) {
 			List<Integer> lTmp = new ArrayList<Integer>();
 			// Print current subset
-			for (int j = 0; j < n; j++)
+			for (int j = 0; j < n; j++) {
 				// (1<<j) is a number with jth bit 1
 				// so when we 'and' them with the
 				// subset number we get which numbers
@@ -22,6 +22,7 @@ public class Utils {
 				// are not
 				if ((i & (1 << j)) > 0)
 					lTmp.add(set.get(j));
+			}
 			lRes.add(lTmp);
 		}
 		return lRes;
