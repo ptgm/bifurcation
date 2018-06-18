@@ -137,7 +137,8 @@ public class GINML2Bifurcation {
 		int iBDD = 1; // True
 		MDDVariable[] ddVariables = this.ddmanager.getAllVariables();
 		for (int i = 0; i < lp.nVars(); i++) {
-			System.out.print("  v=" + i);
+			System.out.print("  v" + i + " " + ddVariables[mapping[i]].toString()
+					+ (sign[i]?" -> " : " -| "));
 			int[] children = new int[ddVariables[mapping[i]].nbval];
 			// ASSUMPTION:
 			// 1. Functions are monotone
@@ -147,11 +148,12 @@ public class GINML2Bifurcation {
 				for (int k = 1; k < children.length; k++) {
 					children[k] = lp.getState();
 				}
-				System.out.println("  set");
 			} else {
 				children[0] = lp.getState();
-				System.out.println("  unset");
 			}
+			for (int k = 0; k < children.length;k++)
+				System.out.print(children[k]);
+			System.out.println();
 			iBDD = MDDBaseOperators.AND.combine(ddmanager, iBDD, ddVariables[mapping[i]].getNode(children));
 		}
 		return iBDD;
