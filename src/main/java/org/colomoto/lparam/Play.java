@@ -2,9 +2,12 @@ package org.colomoto.lparam;
 
 import java.io.File;
 
+import org.colomoto.biolqm.LQMLauncher;
 import org.colomoto.biolqm.LQMScriptLauncher;
 import org.colomoto.biolqm.LogicalModel;
 import org.colomoto.biolqm.NodeInfo;
+import org.colomoto.biolqm.io.LogicalModelFormat;
+import org.colomoto.biolqm.io.OutputStreamProvider;
 import org.colomoto.biolqm.tool.trapspaces.TrapSpace;
 import org.colomoto.biolqm.tool.trapspaces.TrapSpaceList;
 import org.colomoto.biolqm.tool.trapspaces.TrapSpaceTool;
@@ -40,6 +43,7 @@ public class Play {
 		BifurcationHDPath bifPath = gin2Bifurc.getBifurcation(nodeID);
 		bifPath.computePath();
 
+//        LogicalModelFormat outputFormat = LQMLauncher.getFormat("ginml");
 		LQMScriptLauncher lqm = new LQMScriptLauncher(null);
 		TrapSpaceTool trapTool = (TrapSpaceTool) lqm.getTool("trapspace");
 
@@ -47,27 +51,25 @@ public class Play {
 			try {
 				System.out.println("\n" + f);
 				LogicalModel m = gin2Bifurc.getModel(nodeID, f);
-				TrapSpaceList list = trapTool.getResult(m);
-				for (NodeInfo n : list.nodes)
-					System.out.print(n + " ");
-				System.out.println();
-				for (TrapSpace tspace : list) {
-					System.out.println(" " + tspace);
-				}
+//	            outputFormat.export(m, new OutputStreamProvider( f.toString().replaceAll(",", "_") + ".ginml"));
+
+
+				String[] sa = { "terminal" };
+				trapTool.run(m, sa);
+//				TrapSpaceList list = trapTool.getResult(m);
+//				for (NodeInfo n : list.nodes)
+//					System.out.print(n + " ");
+//				System.out.println();
+//				for (TrapSpace tspace : list) {
+//					System.out.println(" " + tspace);
+//				}
 			} catch (Exception e) {
-				System.out.println(f + " ERROR");
+				System.out.println("  ERROR");
 			}
 		}
 	}
 
-	// TODO
-	// 1. Load a model of the article
-	// 2. Pick a target variable
-	// 3. create a path with all possible functions
-	// 4. for each function:
-	// 4.1 translate the function to LogicalModel
-	// 4.2 compute trap-sets of the model
-
+	@Deprecated
 	private static void goDown(byte n, byte max) {
 		while (true) {
 			DependencyManager pdg = new DependencyManager(n);
@@ -89,6 +91,7 @@ public class Play {
 		}
 	}
 
+	@Deprecated
 	private static void goUp(byte n, byte max) {
 		while (true) {
 			DependencyManager pdg = new DependencyManager(n);
@@ -108,16 +111,5 @@ public class Play {
 				break;
 			}
 		}
-	}
-
-	private static BifurcationHDPath getPathUp(byte n, byte max) {
-		BifurcationHDPath bifPath = null;
-		DependencyManager pdg = new DependencyManager(n);
-		Formula fBottom = pdg.createBottomFormula();
-		bifPath = new BifurcationHDPath(pdg, fBottom, max);
-
-		while (bifPath.increase()) {
-		}
-		return bifPath;
 	}
 }

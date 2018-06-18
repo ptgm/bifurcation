@@ -14,6 +14,7 @@ import org.colomoto.mddlib.MDDManager;
 import org.colomoto.mddlib.MDDVariable;
 import org.colomoto.mddlib.operators.MDDBaseOperators;
 import org.ginsim.core.graph.GSGraphManager;
+import org.ginsim.core.graph.regulatorygraph.RegulatoryEdgeSign;
 import org.ginsim.core.graph.regulatorygraph.RegulatoryGraph;
 import org.ginsim.core.graph.regulatorygraph.RegulatoryMultiEdge;
 import org.ginsim.core.graph.regulatorygraph.RegulatoryNode;
@@ -62,6 +63,10 @@ public class GINML2Bifurcation {
 		return mapping;
 	}
 
+	// private boolean[] getRegSigns(String) {
+	// List<Regu>
+	// }
+
 	public BifurcationHDPath getBifurcation(String nodeID) {
 		List<RegulatoryNode> lNodes = g.getNodeOrder();
 		// Get RegulatoryNode
@@ -72,50 +77,80 @@ public class GINML2Bifurcation {
 		Collection<RegulatoryMultiEdge> regs = g.getIncomingEdges(node);
 		DependencyManager pdg = new DependencyManager(regs.size());
 
-		// FIXME - get formula from model
+		// FIXME - get actual node's formula from model
+		// for now, start from bottom formula
 		return new BifurcationHDPath(pdg, pdg.createBottomFormula(), node.getMaxValue());
 	}
 
 	public LogicalModel getModel(String nodeID, Formula f) {
-		int[] mapping = this.getMapping(nodeID);
-//		System.out.print("\nRegs mapping: ");
-//		for (int i = 0; i < mapping.length; i++) {
-//			System.out.print(i + " ");
-//		}
-//		System.out.println();
-
-		LogicalModel m = this.g.getModel();
-		int[] kMDDs = m.getLogicalFunctions();
+		List<RegulatoryNode> lNodes = g.getNodeOrder();
+		// Get RegulatoryNode
 		int nodeIdx = this.getIndex(nodeID);
-//		System.out.println("-old: " + kMDDs[nodeIdx]);
-		kMDDs[nodeIdx] = this.formula2BDD(f, mapping);
-//		System.out.println("-new: " + kMDDs[nodeIdx]);
-//		System.out.println(m.getComponents());
-		return new LogicalModelImpl(m.getComponents(), ddmanager, kMDDs);
+		RegulatoryNode node = lNodes.get(nodeIdx);
+
+		// Get number of regulators (since MDD may miss some non-functional regulators)
+		Collection<RegulatoryMultiEdge> regs = g.getIncomingEdges(node);
+		int[] mapping = new int[regs.size()];
+		boolean[] sign = new boolean[regs.size()];
+		int i = 0;
+		for (RegulatoryMultiEdge e : regs) {
+			String srcID = e.getSource().getId();
+			mapping[i] = this.getIndex(srcID);
+			// Only monotone functions
+			sign[i++] = e.getSign().equals(RegulatoryEdgeSign.POSITIVE);
+		}
+
+		// System.out.print("\nRegs mapping: ");
+		// for (int i = 0; i < mapping.length; i++) {
+		// System.out.print(i + " ");
+		// }
+		// System.out.println();
+
+		LogicalModel m = this.g.getModel().clone();
+		int[] kMDDs = m.getLogicalFunctions();
+		// System.out.println(nodeID + " @ " + nodeIdx);
+		// System.out.println("-old: " + kMDDs[nodeIdx]);
+		kMDDs[nodeIdx] = this.formula2BDD(f, mapping, sign);
+		// System.out.println("-new: " + kMDDs[nodeIdx]);
+		// System.out.println(m.getComponents());
+		// for (int i = 0; i < kMDDs.length; i++) {
+		// System.out.println(m.getComponents().get(i).getNodeID() + " - " + kMDDs[i]);
+		// }
+		// return new LogicalModelImpl(m.getComponents(), ddmanager, kMDDs);
+		return m;
 	}
 
-	private int formula2BDD(Formula f, int[] mapping) {
+	private int formula2BDD(Formula f, int[] mapping, boolean[] sign) {
 		int formulaBDD = 0; // Default value = False
 		for (LogicalParameter lp : f.getParams()) {
-			formulaBDD = MDDBaseOperators.OR.combine(this.ddmanager, formulaBDD, this.lParam2BDD(lp, mapping));
-//			System.out.println("  " + lp + "->" + lp.getState() + " f: " + formulaBDD);
+			if (lp.getState() == 0)
+				continue;
+			formulaBDD = MDDBaseOperators.OR.combine(this.ddmanager, formulaBDD, this.lParam2BDD(lp, mapping, sign));
+			// System.out.println(" " + lp + "->" + lp.getState() + " f: " + formulaBDD);
 		}
 		return formulaBDD;
 	}
 
 	// mapping [index@LP] -> index@Model
-	private int lParam2BDD(LogicalParameter lp, int[] mapping) {
-		int iBDD = lp.getState(); // Default value = Leaf value
+	private int lParam2BDD(LogicalParameter lp, int[] mapping, boolean[] sign) {
+		System.out.println("  - " + lp);
+		int iBDD = 1; // True
 		MDDVariable[] ddVariables = this.ddmanager.getAllVariables();
-		// ddVariables[0].getNode(children);
 		for (int i = 0; i < lp.nVars(); i++) {
+			System.out.print("  v=" + i);
 			int[] children = new int[ddVariables[mapping[i]].nbval];
-			if (lp.isSetAt(i)) {
+			// ASSUMPTION:
+			// 1. Functions are monotone
+			// 2. Leafs are multivalued <- lp state
+			if (lp.isSetAt(i) == sign[i]) {
+				// Assumes that interaction is active from regulator's [1,max]
 				for (int k = 1; k < children.length; k++) {
-					children[k] = 1;
+					children[k] = lp.getState();
 				}
+				System.out.println("  set");
 			} else {
-				children[0] = 1;
+				children[0] = lp.getState();
+				System.out.println("  unset");
 			}
 			iBDD = MDDBaseOperators.AND.combine(ddmanager, iBDD, ddVariables[mapping[i]].getNode(children));
 		}
