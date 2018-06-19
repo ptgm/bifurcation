@@ -4,8 +4,12 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import org.colomoto.biolqm.ConnectivityMatrix;
+import org.colomoto.biolqm.LQMLauncher;
 import org.colomoto.biolqm.LogicalModel;
 import org.colomoto.biolqm.LogicalModelImpl;
+import org.colomoto.biolqm.io.LogicalModelFormat;
+import org.colomoto.biolqm.io.OutputStreamProvider;
 import org.colomoto.lparam.core.BifurcationHDPath;
 import org.colomoto.lparam.core.DependencyManager;
 import org.colomoto.lparam.core.Formula;
@@ -37,7 +41,8 @@ public class GINML2Bifurcation {
 		return this.g != null;
 	}
 
-	private int getIndex(String nodeID) {
+	// TODO put private
+	public int getIndex(String nodeID) {
 		List<RegulatoryNode> lNodes = g.getNodeOrder();
 		for (int i = 0; i < lNodes.size(); i++) {
 			if (lNodes.get(i).getId().equals(nodeID))
@@ -96,7 +101,7 @@ public class GINML2Bifurcation {
 		for (RegulatoryMultiEdge e : regs) {
 			String srcID = e.getSource().getId();
 			mapping[i] = this.getIndex(srcID);
-			// Only monotone functions
+			// ASSUMPTION: Only monotone functions
 			sign[i++] = e.getSign().equals(RegulatoryEdgeSign.POSITIVE);
 		}
 
@@ -106,18 +111,28 @@ public class GINML2Bifurcation {
 		// }
 		// System.out.println();
 
-		LogicalModel m = this.g.getModel().clone();
+		LogicalModel m = this.g.getModel();
 		int[] kMDDs = m.getLogicalFunctions();
 		// System.out.println(nodeID + " @ " + nodeIdx);
-		// System.out.println("-old: " + kMDDs[nodeIdx]);
+		System.out.println("-old: " + kMDDs[nodeIdx]);
 		kMDDs[nodeIdx] = this.formula2BDD(f, mapping, sign);
-		// System.out.println("-new: " + kMDDs[nodeIdx]);
+		System.out.println("-new: " + kMDDs[nodeIdx]);
 		// System.out.println(m.getComponents());
 		// for (int i = 0; i < kMDDs.length; i++) {
 		// System.out.println(m.getComponents().get(i).getNodeID() + " - " + kMDDs[i]);
 		// }
-		// return new LogicalModelImpl(m.getComponents(), ddmanager, kMDDs);
+
+//		ConnectivityMatrix matrix = new ConnectivityMatrix(m);
+//		for (int k = 0; k < 3; k++) {
+//			int[] reg = matrix.getRegulators(k, false);
+//			System.out.print("K=" + k);
+//			for (int j=0; j < reg.length; j++) {
+//				System.out.print(" " + reg[j]);
+//			}
+//			System.out.println();
+//		}
 		return m;
+//		return new LogicalModelImpl(m.getComponents(), ddmanager, kMDDs);
 	}
 
 	private int formula2BDD(Formula f, int[] mapping, boolean[] sign) {
@@ -134,11 +149,10 @@ public class GINML2Bifurcation {
 	// mapping [index@LP] -> index@Model
 	private int lParam2BDD(LogicalParameter lp, int[] mapping, boolean[] sign) {
 		System.out.println("  - " + lp);
-		int iBDD = 1; // True
+		int iBDD = lp.getState(); // True
 		MDDVariable[] ddVariables = this.ddmanager.getAllVariables();
 		for (int i = 0; i < lp.nVars(); i++) {
-			System.out.print("  v" + i + " " + ddVariables[mapping[i]].toString()
-					+ (sign[i]?" -> " : " -| "));
+			System.out.print("  v" + i + " " + ddVariables[mapping[i]].toString() + (sign[i] ? " -> " : " -| "));
 			int[] children = new int[ddVariables[mapping[i]].nbval];
 			// ASSUMPTION:
 			// 1. Functions are monotone
@@ -151,7 +165,7 @@ public class GINML2Bifurcation {
 			} else {
 				children[0] = lp.getState();
 			}
-			for (int k = 0; k < children.length;k++)
+			for (int k = 0; k < children.length; k++)
 				System.out.print(children[k]);
 			System.out.println();
 			iBDD = MDDBaseOperators.AND.combine(ddmanager, iBDD, ddVariables[mapping[i]].getNode(children));

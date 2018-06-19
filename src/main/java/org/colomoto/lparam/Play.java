@@ -2,6 +2,7 @@ package org.colomoto.lparam;
 
 import java.io.File;
 
+import org.colomoto.biolqm.ConnectivityMatrix;
 import org.colomoto.biolqm.LQMLauncher;
 import org.colomoto.biolqm.LQMScriptLauncher;
 import org.colomoto.biolqm.LogicalModel;
@@ -43,7 +44,7 @@ public class Play {
 		BifurcationHDPath bifPath = gin2Bifurc.getBifurcation(nodeID);
 		bifPath.computePath();
 
-//        LogicalModelFormat outputFormat = LQMLauncher.getFormat("ginml");
+        LogicalModelFormat outputFormat = LQMLauncher.getFormat("ginml");
 		LQMScriptLauncher lqm = new LQMScriptLauncher(null);
 		TrapSpaceTool trapTool = (TrapSpaceTool) lqm.getTool("trapspace");
 
@@ -51,10 +52,15 @@ public class Play {
 			try {
 				System.out.println("\n" + f);
 				LogicalModel m = gin2Bifurc.getModel(nodeID, f);
-//	            outputFormat.export(m, new OutputStreamProvider( f.toString().replaceAll(",", "_") + ".ginml"));
+//				System.out.println("\nout: " + m.getLogicalFunctions()[gin2Bifurc.getIndex(nodeID)]);
+				System.out.println(m.getComponents());
+				Play.printMDDs(true, m.getLogicalFunctions());
+				Play.printMDDs(false, m.getExtraLogicalFunctions());
+	            outputFormat.export(m, new OutputStreamProvider(
+	            		f.toString().replaceAll(",", "_")
+	            		+ ".ginml"));
 
-
-				String[] sa = { "terminal" };
+				String[] sa = { "terminal", "all", "bdd" };
 				trapTool.run(m, sa);
 //				TrapSpaceList list = trapTool.getResult(m);
 //				for (NodeInfo n : list.nodes)
@@ -64,11 +70,19 @@ public class Play {
 //					System.out.println(" " + tspace);
 //				}
 			} catch (Exception e) {
-				System.out.println("  ERROR");
+				System.out.println("  ERROR: " + e.getMessage());
 			}
 		}
 	}
 
+	private static void printMDDs(boolean core, int[] iaMDDs) {
+		if (core) System.out.print("Core: ");
+		else System.out.print("Extr: ");
+		for (int i = 0; i < iaMDDs.length; i++) {
+			System.out.print(iaMDDs[i] + " " );
+		}
+		System.out.println();
+	}
 	@Deprecated
 	private static void goDown(byte n, byte max) {
 		while (true) {
