@@ -7,7 +7,7 @@ import java.util.BitSet;
  * @author Pedro T. Monteiro
  * @author Wassim Abou-Jaoudé
  */
-public class LogicalParameter {
+public class LogicalParameter implements Comparable<LogicalParameter>{
 	private int nvars;
 	private byte state; // value
 	private BitSet signature;
@@ -71,6 +71,10 @@ public class LogicalParameter {
 	public byte getState() {
 		return this.state;
 	}
+	
+	public void setState(byte state) {
+		this.state = state;
+	}
 
 	public boolean isLessEqual(LogicalParameter lp) {
 		for (int i = 0; i < this.nvars; i++) {
@@ -121,5 +125,10 @@ public class LogicalParameter {
 			s += this.signature.get(i) ? "1" : "0";
 		}
 		return s;
+	}
+
+	@Override
+	public int compareTo(LogicalParameter o) {
+		return this.toString().compareTo(o.toString());
 	}
 }

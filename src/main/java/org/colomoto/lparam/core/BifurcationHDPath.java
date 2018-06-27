@@ -7,6 +7,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
+ * A bifurcation path is represented by a sequence of functions
+ * {@see com.colomoto.lparam.core.Formula} satisfying the restrictions imposed
+ * by the dependency graph {@see com.colomoto.lparam.core.DependencyManager}.
+ * 
  * @author Pedro T. Monteiro
  * @author Wassim Abou-Jaoudé
  */
@@ -14,12 +18,14 @@ public class BifurcationHDPath {
 	private byte maxTarget;
 	private DependencyManager depGraph;
 	private Deque<Formula> path;
+	private boolean debug;
 
 	public BifurcationHDPath(DependencyManager depGraph, Formula f, byte maxTarget) {
 		this.depGraph = depGraph;
 		this.path = new LinkedList<Formula>();
 		this.path.add(f);
 		this.maxTarget = maxTarget;
+		this.debug = false;
 	}
 
 	/**
@@ -30,18 +36,22 @@ public class BifurcationHDPath {
 	 * Parameter Dependency Graph.
 	 */
 	public boolean increase() {
-		System.out.println("\n------------------ Increasing another step -----------------------");
+		if (debug)
+			System.out.println("\n------------------ Increasing another step -----------------------");
 		// Pick the most general formula (last on the queue)
 		Formula f = this.path.getLast();
-		System.out.println("Current Formula: " + f);
+		if (debug)
+			System.out.println("Current Formula: " + f);
 		// Get possible parent functions respecting DepGraph restrictions
 		Tuple tNeighbour = HasseDiagram.getParent(this.depGraph, f, this.maxTarget);
 		if (tNeighbour == null) {
-			System.out.println("------- END");
+			if (debug)
+				System.out.println("------- END");
 			// cannot increase anymore
 			return false;
 		}
-		System.out.println(" - Parent: " + tNeighbour.getFormula());
+		if (debug)
+			System.out.println(" - Parent: " + tNeighbour.getFormula());
 		this.path.addLast(tNeighbour.getFormula());
 
 		this.depGraph.setDepEq(tNeighbour.getChangeLPs()); // 1st for LPs considered Equal
@@ -60,18 +70,22 @@ public class BifurcationHDPath {
 	}
 
 	public boolean decrease() {
-		System.out.println("\n------------------ Decreasing another step -----------------------");
+		if (debug)
+			System.out.println("\n------------------ Decreasing another step -----------------------");
 		// Pick the most specific formula (first on the queue)
 		Formula f = this.path.getFirst();
-		System.out.println("Current Formula: " + f);
+		if (debug)
+			System.out.println("Current Formula: " + f);
 		// Get possible children functions respecting DepGraph restrictions
 		Tuple tNeighbour = HasseDiagram.getChild(this.depGraph, f, this.maxTarget);
 		if (tNeighbour == null) {
-			System.out.println("------- END");
+			if (debug)
+				System.out.println("------- END");
 			// cannot increase anymore
 			return false;
 		}
-		System.out.println(" - Child: " + tNeighbour.getFormula());
+		if (debug)
+			System.out.println(" - Child: " + tNeighbour.getFormula());
 		this.path.addFirst(tNeighbour.getFormula());
 
 		this.depGraph.setDepEq(tNeighbour.getChangeLPs()); // 1st for LPs considered Equal
@@ -90,10 +104,10 @@ public class BifurcationHDPath {
 	}
 
 	public void computePath() {
-		// compute everything above
+		// compute everything bellow
 		while (this.decrease()) {
 		}
-		// compute everything bellow
+		// compute everything above
 		while (this.increase()) {
 		}
 	}

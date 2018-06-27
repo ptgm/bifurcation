@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * A Formula represents a multivalued function by a list of its logical
+ * parameters {@see com.colomoto.lparam.core.LogicalParameter}, where each
+ * parameter has a given valuation.
  * 
  * @author Pedro T. Monteiro
  * @author Wassim Abou-Jaoudé
@@ -25,7 +28,7 @@ public class Formula {
 	}
 
 	public boolean equals(Object o) {
-		Formula f = (Formula)o;
+		Formula f = (Formula) o;
 		// Same number of parameters
 		if (this.lParams.size() != f.lParams.size())
 			return false;
@@ -39,6 +42,7 @@ public class Formula {
 		}
 		return true;
 	}
+
 	public List<LogicalParameter> getParams() {
 		return Collections.unmodifiableList(this.lParams);
 	}
@@ -46,7 +50,7 @@ public class Formula {
 	public byte getValueOf(int i) {
 		return this.lParams.get(i).getState();
 	}
-	
+
 	public byte getValueOf(LogicalParameter lp) {
 		int pos = this.lParams.indexOf(lp);
 		if (pos < 0)

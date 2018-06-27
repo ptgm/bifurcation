@@ -2,16 +2,23 @@ package org.colomoto.lparam.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-// FIXME This manager should have positions rather than LPs. Currently is a mess to get their value.
-// Is the current value of an LP being taken from f or from the manager...?
+/**
+ * Class to represent the dependency graph between all the logical parameters of
+ * a function. This includes both the inequalities and equalities.
+ * 
+ * @author Pedro T. Monteiro
+ * @author Wassim Abou-Jaoudé
+ *
+ */
 public class DependencyManager {
+	// NOTE: in the future, efficiency-wise, change this to positions rather than
+	// LPs
 	private int nvars;
 	private Map<LogicalParameter, Set<LogicalParameter>> mParents;
 	private Map<LogicalParameter, Set<LogicalParameter>> mChildren;
@@ -37,12 +44,7 @@ public class DependencyManager {
 		// Build dependency graph Bottom-Up
 		this.buildGraphBottomUp(lpBottom);
 		// All LPs ordered
-		this.sAll.sort(new Comparator<LogicalParameter>() {
-			@Override
-			public int compare(LogicalParameter o1, LogicalParameter o2) {
-				return o1.toString().compareTo(o2.toString());
-			}
-		});
+		Collections.sort(this.sAll);
 		// Initialize equals set
 		for (LogicalParameter lp : this.sAll) {
 			this.mEquals.put(lp, new HashSet<LogicalParameter>());
@@ -177,7 +179,6 @@ public class DependencyManager {
 	public void setDepLT(LogicalParameter lp1, LogicalParameter lp2) {
 		if (!lp1.isIndependent(lp2) || this.isDepLT(lp1, lp2))
 			return; // already comparable || already LT
-		// System.out.println(".setDepLT: " + lp1 + " < " + lp2);
 		this.addDepLT(lp1, lp2);
 		// Infer new dependencies Up & Down
 		this.setDepLTIncr(lp1, lp2);
@@ -198,10 +199,12 @@ public class DependencyManager {
 		}
 	}
 
-	// FIXME this sum case is missing
+	// FIXME Property 3 of the paper is missing.
+	// For example, this case with a sum is not inferred
 	// k1 + k3 < k2 + k4
 	// k1 + k2 < k3 + k4
 	// = 2*k1 + k/2 + k/3 < k/2 + k/3 + 2*k4
+	// = k1 < k4
 	private void setDepLTIncr(LogicalParameter lp1, LogicalParameter lp2) {
 		for (int i = 0; i < this.nvars; i++) {
 			if (!lp1.isSetAt(i) && !lp2.isSetAt(i)) {
@@ -211,7 +214,6 @@ public class DependencyManager {
 				lpb.setBit(i, true);
 				if (!lpa.isIndependent(lpb) || this.isDepLT(lpa, lpb))
 					continue; // already comparable || already LT
-				// System.out.println(" .setDepLT+: " + lpa + " < " + lpb);
 				this.addDepLT(lpa, lpb);
 				this.setDepLTIncr(lpa, lpb);
 			}
@@ -227,7 +229,6 @@ public class DependencyManager {
 				lpb.setBit(i, false);
 				if (!lpa.isIndependent(lpb) || this.isDepLT(lpa, lpb))
 					continue; // already comparable || already LT
-				// System.out.println(" .setDepLT-: " + lpa + " < " + lpb);
 				this.addDepLT(lpa, lpb);
 				this.setDepLTDecr(lpa, lpb);
 			}
@@ -243,7 +244,6 @@ public class DependencyManager {
 	public void setDepEq(LogicalParameter lp1, LogicalParameter lp2) {
 		if (!lp1.isIndependent(lp2) || this.isDepEQ(lp1, lp2))
 			return; // already comparable || already depEquals
-		// System.out.println(".setDepEq: " + lp1 + " == " + lp2);
 		this.addDepEQ(lp1, lp2);
 		// Infer new dependencies Up & Down
 		this.setDepEQIncr(lp1, lp2);
@@ -260,7 +260,6 @@ public class DependencyManager {
 				lpb.setBit(i, true);
 				if (!lpa.isIndependent(lpb) || this.isDepEQ(lpa, lpb))
 					continue; // already comparable || already EQ
-				// System.out.println(" .setDepEQ+: " + lpa + " == " + lpb);
 				this.addDepEQ(lpa, lpb);
 				this.setDepEQIncr(lpa, lpb);
 			}
@@ -276,19 +275,20 @@ public class DependencyManager {
 				lpb.setBit(i, false);
 				if (!lpa.isIndependent(lpb) || this.isDepEQ(lpa, lpb))
 					continue; // already comparable || already EQ
-				// System.out.println(" .setDepEQ-: " + lpa + " == " + lpb);
 				this.addDepEQ(lpa, lpb);
 				this.setDepEQDecr(lpa, lpb);
 			}
 		}
 	}
 
-	public void setDepEq(Set<LogicalParameter> sLPs) { // for the same value
+	// for the same value
+	public void setDepEq(Set<LogicalParameter> sLPs) {
 		for (LogicalParameter lp1 : sLPs) {
 			for (LogicalParameter lp2 : sLPs) {
 				if (lp1.equals(lp2)) // if they are the same
 					continue;
-				if (lp1.getState() == lp2.getState()) { // independence is tested inside setDepEq()
+				if (lp1.getState() == lp2.getState()) {
+					// independence is tested inside setDepEq()
 					this.setDepEq(lp1, lp2);
 				}
 			}

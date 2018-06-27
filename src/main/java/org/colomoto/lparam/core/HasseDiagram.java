@@ -9,6 +9,9 @@ import java.util.Set;
 import org.colomoto.lparam.Utils;
 
 /**
+ * Class to generate immediate neighboring functions, given a reference function
+ * {@see com.colomoto.lparam.core.Formula} and a dependency graph on the logical
+ * parameters {@see com.colomoto.lparam.core.DependencyManager}.
  * 
  * @author Pedro T. Monteiro
  * @author Wassim Abou-Jaoudé
@@ -31,38 +34,30 @@ public class HasseDiagram {
 			LogicalParameter fLP = fLPs.get(i);
 			if (parent && fLP.getState() >= maxTarget || !parent && fLP.getState() <= 0)
 				continue; // cannot increase/decrease more
-			Set<LogicalParameter> sNeighbours = parent?pdg.getParentDeps(fLP):
-				pdg.getChildrenDeps(fLP);
-			for (LogicalParameter lParent : sNeighbours) {
+			Set<LogicalParameter> sNeighbours = parent ? pdg.getParentDeps(fLP) : pdg.getChildrenDeps(fLP);
+			for (LogicalParameter lpNeigh : sNeighbours) {
 				// If at least one Parent/Child has same value -> cannot change
-				if (f.getValueOf(lParent) == fLP.getState()) {
+				if (f.getValueOf(lpNeigh) == fLP.getState()) {
 					continue param;
 				}
 			}
-			lPos.add(i);
+			lPos.add(i); // <- LPs than can change
 		}
-		System.out.println(". LPs than can change: " + lPos); // <- LPs than can change
+
 		if (fullyAsync) {
-			// equal LogicalParameters are possible
+			// If equal LogicalParameters are possible
 			List<List<Integer>> lSubsets = Utils.getSubsets(lPos);
 			Collections.shuffle(lSubsets);
 			for (List<Integer> elems : lSubsets) {
-				if (elems.isEmpty()) {
+				if (elems.isEmpty() || !pdg.isValidLPSet(elems)) {
 					continue;
 				}
 				// Increase if equal LogicalParameters can all increase -- begin
-				if (!pdg.isValidLPSet(elems)) {
-//					System.out.println(". LPs combination: " + elems);
-//					System.out.println("   . invalid");
-					continue;
-				}
-				System.out.println(". LPs valid combination: " + elems);
-				System.out.println("   . Valid");
-				Formula fClone = f.clone();
+				Formula fNeighbor = f.clone();
 				Set<LogicalParameter> sChangeParams = new HashSet<LogicalParameter>();
 				for (Integer i : elems) {
 					// if can increase() : v <= MaxTarget && v <= LPsDeps
-					LogicalParameter lp = fClone.getParams().get(i);
+					LogicalParameter lp = fNeighbor.getParams().get(i);
 					if (parent) {
 						lp.increase();
 					} else {
@@ -70,10 +65,10 @@ public class HasseDiagram {
 					}
 					sChangeParams.add(lp);
 				}
-				return new Tuple(fClone, sChangeParams);
+				return new Tuple(fNeighbor, sChangeParams);
 			}
 		} else {
-			// equal LogicalParameters are impossible
+			// If equal LogicalParameters are not considered
 			Collections.shuffle(lPos); // randomly choose a parameter
 			Formula fClone = f.clone();
 			LogicalParameter lp = fClone.getParams().get(lPos.get(0));
