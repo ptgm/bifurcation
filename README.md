@@ -10,7 +10,7 @@ How to use it?
 To compile it you will need Java6 JDK and [maven](http://maven.apache.org/).
 
 * grab the source from github
-* run "mvn package assembly:single" to compile and package it. Please note the assembly:single to include all the dependencies in the final jar package
+* run "mvn package assembly:single" to compile and package it. Please note the assembly:single to include all the dependencies ([GINsim](http://ginsim.org) and [bioLQM](http://github.com/colomoto/biolqm)) in the final jar package
 * you can use the jar in the "target/" subdirectory.
 
 You can either integrate the .jar file in your tool, or launch the program by command line, providing a GINsim model (.zginml file format) and the name of the component under study, as follows:
@@ -26,6 +26,6 @@ This code is available under GPL-3.0.
 Authors
 -------
 
-Pedro T. Monteiro
+Pedro T. Monteiro - [ptgm](https://github.com/ptgm)
 
-Wassim Abou-Jaoudé
+Wassim Abou-Jaoudé - [aboujaoudew](https://github.com/aboujaoudew)
