@@ -1,4 +1,4 @@
-Computatoin of logical bifurcation diagrams
+Computation of logical bifurcation diagrams
 ===========================================
 
 The aim of this project is to be able to compute the bifurcation diagram of a given (Boolean or multivalued) logical function. To achieve this it computes the local neighbors of monotone multivalued functions.
