@@ -1,8 +1,9 @@
-bifurcation: compute logical bifurcation diagrams
-=================================================
+Computatoin of logical bifurcation diagrams
+===========================================
 
-The aim of this project is to be able to compute the bifurcation diagram of a given multivalued logical function. To achieve this it computes the local neighbors of monotone multivalued functions.
-This work is a follow-up of [functionhood](https://github.com/ptgm/functionhood), with Claudine Chaouiya and José Cury, where it is proposed a procedure to compute the local neighborhood of a given monotone Boolean function.
+The aim of this project is to be able to compute the bifurcation diagram of a given (Boolean or multivalued) logical function. To achieve this it computes the local neighbors of monotone multivalued functions.
+
+This work is a follow-up of [functionhood](https://github.com/ptgm/functionhood), with Claudine Chaouiya and José Cury, where a procedure is proposed to compute the local neighborhood of a given monotone Boolean function.
 
 How to use it?
 --------------
