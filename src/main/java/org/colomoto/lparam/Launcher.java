@@ -1,6 +1,8 @@
 package org.colomoto.lparam;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.HashMap;
 
 import org.colomoto.biolqm.LQMLauncher;
 import org.colomoto.biolqm.LQMScriptLauncher;
@@ -12,6 +14,11 @@ import org.colomoto.biolqm.tool.fixpoints.FixpointTool;
 import org.colomoto.biolqm.tool.trapspaces.TrapSpaceTool;
 import org.colomoto.lparam.core.BifurcationHDPath;
 import org.colomoto.lparam.core.Formula;
+import org.ginsim.common.application.GsException;
+import org.ginsim.core.graph.GSGraphManager;
+import org.ginsim.core.graph.regulatorygraph.RegulatoryGraph;
+import org.ginsim.core.graph.regulatorygraph.RegulatoryMultiEdge;
+import org.ginsim.core.graph.regulatorygraph.RegulatoryNode;
 
 public class Launcher {
 
@@ -35,13 +42,22 @@ public class Launcher {
 			Launcher.usage();
 		}
 		String nodeID = argv[1];
-
-		GINML2Bifurcation gin2Bifurc = new GINML2Bifurcation(fModel);
-		if (!gin2Bifurc.hasModel()) {
+		
+		RegulatoryGraph g = null;
+		try {
+			g = (RegulatoryGraph) GSGraphManager.getInstance().open(fModel);
+		} catch (GsException e) {
 			System.out.println("Could not load model: " + fModel);
 			Launcher.usage();
 		}
+
+		GINML2Bifurcation gin2Bifurc = new GINML2Bifurcation(g);
+		if (!gin2Bifurc.isFuncConsistent(nodeID)) {
+			System.out.println("Function of " + nodeID + " does not respect the topology");
+			Launcher.usage();
+		}
 		// Argument validation -- end
+
 
 		// Compute BifurcationPath for node
 		BifurcationHDPath bifPath = gin2Bifurc.getBifurcation(nodeID);
