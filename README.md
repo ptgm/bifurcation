@@ -5,6 +5,9 @@ The aim of this project is to be able to compute the bifurcation diagram of a gi
 
 This work is a follow-up of [functionhood](https://github.com/ptgm/functionhood), with Claudine Chaouiya and José Cury, where a procedure is proposed to compute the local neighborhood of a given monotone Boolean function.
 
+The current implementation is described in the paper _Abou-Jaoudé and Monteiro, Journal of Theoretical Biology, submitted_
+Note that the implementation accounts only for Property 2 of the paper. In the future, we will address Property 3.
+
 How to use it?
 --------------
 
